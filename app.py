@@ -14,9 +14,10 @@ st.set_page_config(page_title="Olist E-Commerce Dashboard", layout="wide")
 
 st.title("Olist E-Commerce Dashboard")
 st.markdown("""
-Dashboard ini dibuat untuk menjawab dua pertanyaan bisnis utama:
+Dashboard ini dibuat untuk menjawab tiga pertanyaan bisnis utama:
 1. **Bagaimana pola performa penjualan dari waktu ke waktu?**
 2. **Faktor apa yang berpengaruh terhadap kepuasan pelanggan (terutama waktu pengiriman)?**
+3. **Bagaimana hubungan antara kepuasan pelanggan dengan kategori produk yang dibeli?**
 """)
 
 # ===============================
@@ -62,7 +63,7 @@ df['order_year'] = df['order_purchase_timestamp'].dt.year
 # ===============================
 # Filter Global (Sidebar)
 # ===============================
-st.sidebar.header("🔍 Filter Data Global")
+st.sidebar.header("Filter Data")
 
 tahun_opsi = ['Semua'] + sorted(df['order_year'].dropna().unique().tolist())
 tahun_terpilih = st.sidebar.selectbox("Pilih Tahun:", options=tahun_opsi, index=0)
@@ -75,9 +76,10 @@ if tahun_terpilih != 'Semua':
 # ===============================
 # Tabs untuk Pertanyaan Bisnis
 # ===============================
-tab1, tab2 = st.tabs([
+tab1, tab2, tab3 = st.tabs([
     "Tren Penjualan dari Waktu ke Waktu",
-    "Hubungan Waktu Pengiriman & Kepuasan Pelanggan"
+    "Hubungan Waktu Pengiriman & Kepuasan Pelanggan",
+    "Kepuasan Pelanggan per Kategori Produk"
 ])
 
 # ======================================================
@@ -132,7 +134,6 @@ with tab1:
         .reset_index()
     )
 
-
     fig3, ax3 = plt.subplots(figsize=(10,6))
     sns.barplot(y='product_category_name', x='price', data=top10_products, palette='cool', ax=ax3)
     ax3.set_title(f"Top 10 Kategori Produk {'(Semua Tahun)' if tahun_terpilih == 'Semua' else f'Tahun {tahun_terpilih}'}", fontsize=14)
@@ -140,7 +141,6 @@ with tab1:
     ax3.set_ylabel('Kategori Produk')
     st.pyplot(fig3)
 
-    
 
 # ======================================================
 # TAB 2: Waktu Pengiriman & Kepuasan Pelanggan
@@ -188,6 +188,56 @@ with tab2:
     ax3.set_ylabel('Review Score')
     ax3.grid(True)
     st.pyplot(fig3)
+
+
+# ======================================================
+# TAB 3: Kepuasan Pelanggan per Kategori Produk
+# ======================================================
+with tab3:
+    st.header("Bagaimana Hubungan antara Kepuasan Pelanggan dengan Kategori Produk yang Dibeli?")
+    st.markdown(f"**Tahun:** {tahun_terpilih}")
+
+    st.subheader("Rata-rata Skor Review per Kategori Produk (Top 10)")
+    avg_review_by_category = (
+        filtered_df.groupby('product_category_name')['review_score']
+        .mean()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    fig, ax = plt.subplots(figsize=(10,6))
+    sns.barplot(x='review_score', y='product_category_name', data=avg_review_by_category, palette='viridis', ax=ax)
+    ax.set_title('Rata-rata Skor Review per Kategori Produk (Top 15)')
+    ax.set_xlabel('Rata-rata Skor Review')
+    ax.set_ylabel('Kategori Produk')
+    st.pyplot(fig)
+
+    st.subheader("Hubungan Rata-rata Lama Pengiriman dan Skor Review per Kategori (Top 10)")
+
+    delivery_review = (
+        filtered_df.groupby('product_category_name')[['delivery_time_days', 'review_score']]
+        .mean()
+        .sort_values(by='review_score', ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    fig2, ax2 = plt.subplots(figsize=(10,6))
+    sns.scatterplot(data=delivery_review, x='delivery_time_days', y='review_score', ax=ax2)
+
+    for i in range(len(delivery_review)):
+        ax2.text(
+            delivery_review.delivery_time_days[i] + 0.1,
+            delivery_review.review_score[i],
+            delivery_review.product_category_name[i],
+            fontsize=9
+        )
+
+    ax2.set_title('Hubungan Lama Pengiriman dan Skor Review per Kategori (Top 10)')
+    ax2.set_xlabel('Rata-rata Lama Pengiriman (hari)')
+    ax2.set_ylabel('Rata-rata Skor Review')
+    st.pyplot(fig2)
 
 # ======================================================
 # Footer
