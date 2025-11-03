@@ -132,6 +132,7 @@ with tab1:
         .reset_index()
     )
 
+
     fig3, ax3 = plt.subplots(figsize=(10,6))
     sns.barplot(y='product_category_name', x='price', data=top10_products, palette='cool', ax=ax3)
     ax3.set_title(f"Top 10 Kategori Produk {'(Semua Tahun)' if tahun_terpilih == 'Semua' else f'Tahun {tahun_terpilih}'}", fontsize=14)
@@ -139,13 +140,15 @@ with tab1:
     ax3.set_ylabel('Kategori Produk')
     st.pyplot(fig3)
 
+    
+
 # ======================================================
 # TAB 2: Waktu Pengiriman & Kepuasan Pelanggan
 # ======================================================
 with tab2:
     st.header("Hubungan antara Waktu Pengiriman dan Skor Ulasan")
     st.markdown(f"**Tahun:** {tahun_terpilih}")
-    
+
     # Distribusi Lama Pengiriman
     st.subheader("Distribusi Lama Pengiriman (Hari)")
     fig1, ax1 = plt.subplots(figsize=(10,5))
